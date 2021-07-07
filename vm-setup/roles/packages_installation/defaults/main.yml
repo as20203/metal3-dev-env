@@ -43,7 +43,7 @@ packages:
         - libssl-dev
     pip3:
      - python-apt
-     - openshift==0.11.2
+     - kubernetes==17.17.0
      - pyYAML
      - virtualbmc
      - lxml
