@@ -1,0 +1,8 @@
+---
+- name: t
+  hosts: localhost
+  tasks:
+  - name: t
+    k8s:
+      kind: pods
+

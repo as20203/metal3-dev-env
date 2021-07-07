@@ -67,11 +67,38 @@ def filter_provisioning(resources, state):
     return filtered
 
 
+def get_names(resources):
+    """return resources names list"""
+    names = []
+    for r in resources:
+        try:
+            names.append(r["metadata"]["name"])
+        except KeyError:
+            display.warning(msg("['metadata']['name']", resources))
+
+    return names
+
+
+def filter_k8s_version(resources, version):
+    """return resources with a defined k8s version"""
+    filtered = []
+    for r in resources:
+        try:
+            if r["spec"]["version"] == version:
+                filtered.append(r)
+        except KeyError:
+            display.warning(msg("['spec']['version']", resources))
+
+    return filtered
+
+
 class FilterModule:
     def filters(self):
         filters = {
             "filter_phase": filter_phase,
             "filter_ready": filter_ready,
             "filter_provisioning": filter_provisioning,
+            "get_names": get_names,
+            "filter_k8s_version": filter_k8s_version,
         }
         return filters
