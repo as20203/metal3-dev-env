@@ -512,3 +512,16 @@ if [ "${EPHEMERAL_CLUSTER}" != "tilt" ]; then
   fi
   apply_bm_hosts
 fi
+
+if [ "${EPHEMERAL_CLUSTER}" == "tilt" ]; then
+pushd "${CAPM3PATH}"
+cat <<EOF > tilt-settings.json
+{
+  "provider_repos": [ "../baremetal-operator", "../ip-address-manager"],
+  "enable_providers": [ "metal3-bmo", "metal3-ipam"]
+}
+EOF
+make kind-reset
+make tilt-up
+popd
+fi
