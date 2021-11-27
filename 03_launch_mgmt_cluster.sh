@@ -465,6 +465,16 @@ EOF
 #
 # Create a management cluster
 #
+function install_prometheus_grafana () {
+  helm install prometheus prometheus-community/prometheus
+  kubectl expose service prometheus-server --type=NodePort --target-port=9090 --name=prometheus-server-np
+
+  helm install grafana grafana/grafana
+  kubectl expose service grafana --type=NodePort --target-port=3000 --name=grafana-np
+
+  minikube service prometheus-server-np
+  minikube service grafana-np
+}
 function start_management_cluster () {
   if [ "${EPHEMERAL_CLUSTER}" == "kind" ]; then
     launch_kind
@@ -484,6 +494,7 @@ function start_management_cluster () {
       sudo su -l -c "minikube ssh sudo ip addr add $INITIAL_IRONICBRIDGE_IP/$PROVISIONING_CIDR dev $CLUSTER_PROVISIONING_INTERFACE" "${USER}"
     fi
   fi
+  install_prometheus_grafana
 }
 
 # -----------------------------
