@@ -80,6 +80,7 @@ fi
 # Restart libvirtd service to get the new group membership loaded
 if ! id "$USER" | grep -q libvirt; then
   sudo usermod -a -G "libvirt" "$USER"
+  sudo usermod -a -G "libvirtd" "$USER"
   sudo systemctl restart libvirtd
 fi
 
@@ -249,3 +250,11 @@ function init_minikube() {
 if [ "${EPHEMERAL_CLUSTER}" == "minikube" ]; then
   init_minikube
 fi
+
+pushd .
+cd /tmp/
+wget https://get.helm.sh/helm-v3.7.1-linux-amd64.tar.gz
+tar -xf helm-v3.7.1-linux-amd64.tar.gz
+sudo mv linux-amd64/helm /usr/bin/
+popd
+
