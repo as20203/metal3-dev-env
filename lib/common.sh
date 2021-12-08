@@ -467,7 +467,7 @@ function remove_ironic_containers() {
 
 export EPHEMERAL_CLUSTER=minikube
 export FORCE_REPO_UPDATE="false"
-export NUM_NODES=4
+export NUM_NODES=16
 
-export NUM_OF_MASTER_REPLICAS="3"
+export NUM_OF_MASTER_REPLICAS="15"
 export NUM_OF_WORKER_REPLICAS="1"
