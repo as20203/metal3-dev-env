@@ -58,7 +58,7 @@ REGISTRY: "{{ lookup('env', 'REGISTRY') | default('192.168.111.1:5000', true) }}
 CALICO_MINOR_RELEASE: "{{ lookup('env', 'CALICO_MINOR_RELEASE') | default('v3.21', true) }}"
 CALICO_PATCH_RELEASE: "{{ lookup('env', 'CALICO_PATCH_RELEASE') | default('v3.21.0', true) }}"
 DOCKER_HUB_PROXY: "{{ lookup('env', 'DOCKER_HUB_PROXY') }}"
-
+CAPM3_FAST_TRACK: "{{  lookup('env', 'CAPM3_FAST_TRACK') }}"
 # Environment variables for deployment. IMAGE_OS can be Centos or Ubuntu, change accordingly to your needs.
 IMAGE_OS: "{{ lookup('env', 'IMAGE_OS') | default('Centos', true) }}"
 CONTAINER_RUNTIME: "{{ lookup('env', 'CONTAINER_RUNTIME') | default('podman', true) }}"

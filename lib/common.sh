@@ -120,8 +120,9 @@ export BMOPATH="${BMOPATH:-${M3PATH}/baremetal-operator}"
 export RUN_LOCAL_IRONIC_SCRIPT="${BMOPATH}/tools/run_local_ironic.sh"
 
 export CAPM3PATH="${CAPM3PATH:-${M3PATH}/cluster-api-provider-metal3}"
-export CAPM3_BASE_URL="${CAPM3_BASE_URL:-metal3-io/cluster-api-provider-metal3}"
+export CAPM3_BASE_URL="${CAPM3_BASE_URL:-Nordix/cluster-api-provider-metal3}"
 export CAPM3REPO="${CAPM3REPO:-https://github.com/${CAPM3_BASE_URL}}"
+export CAPM3_LOCAL_IMAGE="${CAPM3PATH}"
 
 export IPAMPATH="${IPAMPATH:-${M3PATH}/ip-address-manager}"
 export IPAM_BASE_URL="${IPAM_BASE_URL:-metal3-io/ip-address-manager}"
@@ -146,7 +147,7 @@ if [ "${CAPM3_VERSION}" == "v1alpha4" ]; then
 elif [ "${CAPM3_VERSION}" == "v1alpha5" ]; then
   CAPM3BRANCH="${CAPM3BRANCH:-release-0.5}"
 else
-  CAPM3BRANCH="${CAPM3BRANCH:-main}"
+  CAPM3BRANCH="${CAPM3BRANCH:-allow-fast-track-when-automatedCleaning-is-true}"
 fi
 
 BMOREPO="${BMOREPO:-https://github.com/metal3-io/baremetal-operator.git}"
@@ -171,6 +172,7 @@ export VM_EXTRADISKS_FILE_SYSTEM=${VM_EXTRADISKS_FILE_SYSTEM:-"ext4"}
 export VM_EXTRADISKS_MOUNT_DIR=${VM_EXTRADISKS_MOUNT_DIR:-"/mnt/disk2"}
 export NODE_DRAIN_TIMEOUT=${NODE_DRAIN_TIMEOUT:-"0s"}
 export MAX_SURGE_VALUE="${MAX_SURGE_VALUE:-"1"}"
+export CAPM3_FAST_TRACK="${CAPM3_FAST_TRACK:-'false'}"
 
 # Docker Hub proxy registry (or docker.io if no proxy)
 export DOCKER_HUB_PROXY=${DOCKER_HUB_PROXY:-"docker.io"}
