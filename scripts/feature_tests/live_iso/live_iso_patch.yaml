@@ -1,0 +1,4 @@
+spec:
+  image:
+    url: https://artifactory.nordix.org/artifactory/metal3/images/iso/ubuntu-20.04.3-live-server-amd64.iso
+    format: "live-iso"
