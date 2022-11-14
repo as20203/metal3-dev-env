@@ -182,8 +182,8 @@ fi
 
 network_address INITIAL_IRONICBRIDGE_IP "$PROVISIONING_NETWORK" 9
 
-export DEPLOY_KERNEL_URL=${DEPLOY_KERNEL_URL:-"http://${CLUSTER_URL_HOST}:${HTTP_PORT}/images/ironic-python-agent.kernel"}
-export DEPLOY_RAMDISK_URL=${DEPLOY_RAMDISK_URL:-"http://${CLUSTER_URL_HOST}:${HTTP_PORT}/images/ironic-python-agent.initramfs"}
+export DEPLOY_KERNEL_URL=${DEPLOY_KERNEL_URL:-"http://${PROVISIONING_IP}:${HTTP_PORT}/images/ironic-python-agent.kernel"}
+export DEPLOY_RAMDISK_URL=${DEPLOY_RAMDISK_URL:-"http://${PROVISIONING_IP}:${HTTP_PORT}/images/ironic-python-agent.initramfs"}
 export DEPLOY_ISO_URL=${DEPLOY_ISO_URL:-}
 
 if [ "${IRONIC_TLS_SETUP}" == "true" ]; then

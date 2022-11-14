@@ -10,8 +10,6 @@ source lib/releases.sh
 # shellcheck disable=SC1091
 source lib/network.sh
 
-export IRONIC_HOST="${CLUSTER_URL_HOST}"
-export IRONIC_HOST_IP="${CLUSTER_PROVISIONING_IP}"
 export REPO_IMAGE_PREFIX="quay.io"
 
 sudo mkdir -p "${IRONIC_DATA_DIR}"
@@ -124,14 +122,14 @@ function launch_ironic() {
     # Update Configmap parameters with correct urls
     cat << EOF | sudo tee "$IRONIC_DATA_DIR/ironic_bmo_configmap.env"
 HTTP_PORT=${HTTP_PORT}
-PROVISIONING_IP=${CLUSTER_PROVISIONING_IP}
+#PROVISIONING_IP=${CLUSTER_PROVISIONING_IP}
 PROVISIONING_CIDR=${PROVISIONING_CIDR}
 PROVISIONING_INTERFACE=${CLUSTER_PROVISIONING_INTERFACE}
 DHCP_RANGE=${CLUSTER_DHCP_RANGE}
 DEPLOY_KERNEL_URL=${DEPLOY_KERNEL_URL}
 DEPLOY_RAMDISK_URL=${DEPLOY_RAMDISK_URL}
-IRONIC_ENDPOINT=${IRONIC_URL}
-IRONIC_INSPECTOR_ENDPOINT=${IRONIC_INSPECTOR_URL}
+IRONIC_ENDPOINT=https://${IRONIC_HOST_IP}:${IRONIC_API_PORT}/v1/
+IRONIC_INSPECTOR_ENDPOINT=https://${IRONIC_HOST_IP}:${IRONIC_INSPECTOR_PORT}/v1/
 CACHEURL=http://${PROVISIONING_URL_HOST}/images
 IRONIC_FAST_TRACK=true
 RESTART_CONTAINER_CERTIFICATE_UPDATED="${RESTART_CONTAINER_CERTIFICATE_UPDATED}"
@@ -211,13 +209,13 @@ function apply_bm_hosts() {
   NAMESPACE=$1
   pushd "${BMOPATH}"
   list_nodes | make_bm_hosts > "${WORKING_DIR}/bmhosts_crs.yaml"
-  if [[ -n "$(list_nodes)" ]]; then
-    echo "bmhosts_crs.yaml is applying"
-    while ! kubectl apply -f "${WORKING_DIR}/bmhosts_crs.yaml" -n "$NAMESPACE" &>/dev/null; do
-	    sleep 3
-    done
-    echo "bmhosts_crs.yaml is successfully applied"
-  fi
+  # if [[ -n "$(list_nodes)" ]]; then
+  #   echo "bmhosts_crs.yaml is applying"
+  #   while ! kubectl apply -f "${WORKING_DIR}/bmhosts_crs.yaml" -n "$NAMESPACE" &>/dev/null; do
+	#     sleep 3
+  #   done
+  #   echo "bmhosts_crs.yaml is successfully applied"
+  # fi
   popd
 }
 
@@ -301,12 +299,12 @@ function patch_clusterctl(){
   pushd "${CAPM3PATH}"
   mkdir -p "${HOME}"/.cluster-api
   touch "${HOME}"/.cluster-api/clusterctl.yaml
-  
+
 ## This is hard-coded until we use clusterctl (upcoming CAPI v1.3.0 minor release)
 ## with cert-manager v1.10.0
   cat << EOF | sudo tee "${HOME}/.cluster-api/clusterctl.yaml"
 cert-manager:
-  version: "v1.10.0" 
+  version: "v1.10.0"
 EOF
 
   # At this point the images variables have been updated with update_images
@@ -404,14 +402,8 @@ function start_management_cluster () {
       sudo su -l -c "minikube ssh -- sudo sysctl -w net.ipv6.conf.all.disable_ipv6=0" "${USER}"
       sudo su -l -c "minikube ssh -- sudo ip addr add $MINIKUBE_BMNET_V6_IP/64 dev eth3" "${USER}"
     fi
-    if [[ "${PROVISIONING_IPV6}" == "true" ]]; then
-      sudo su -l -c 'minikube ssh "sudo ip -6 addr add '"$CLUSTER_PROVISIONING_IP/$PROVISIONING_CIDR"' dev eth2"' "${USER}"
-    else
-      sudo su -l -c "minikube ssh sudo brctl addbr $CLUSTER_PROVISIONING_INTERFACE" "${USER}"
-      sudo su -l -c "minikube ssh sudo ip link set $CLUSTER_PROVISIONING_INTERFACE up" "${USER}"
-      sudo su -l -c "minikube ssh sudo brctl addif $CLUSTER_PROVISIONING_INTERFACE eth2" "${USER}"
-      sudo su -l -c "minikube ssh sudo ip addr add $INITIAL_IRONICBRIDGE_IP/$PROVISIONING_CIDR dev $CLUSTER_PROVISIONING_INTERFACE" "${USER}"
-    fi
+    # export IRONIC_HOST="${CLUSTER_URL_HOST}"
+    export IRONIC_HOST_IP="$(minikube ip)"
   fi
 }
 
