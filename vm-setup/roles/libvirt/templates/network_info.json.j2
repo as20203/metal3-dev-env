@@ -1,0 +1,45 @@
+{
+"links": [
+    { // provisioning
+        "id": "provisioning", // Generic, generated ID
+        "type": "phy", // Can be 'vif', 'phy' or (future) 'bond'
+        "ethernet_mac_address": "{{ node_mac_map.get(item.name).get('provisioning') }}"
+    },
+    { // external  
+        "id": "external",
+        "type": "phy",
+        "ethernet_mac_address": "{{ node_mac_map.get(item.name).get('baremetal') }}"
+    }
+],
+{% set ip_last_section = (node_idx + 1) | string() %}
+"networks": [
+    {
+        "id": "provisioning",
+        "type": "ipv4",
+        "link": "provisioning",
+        "ip_address": "{{ (provisioning_network[0].address_v4.split('.')[0:3] + [ ip_last_section ])|join('.') }}",
+        "netmask": "{{ provisioning_network[0].netmask_v4 }}",
+        "routes": [
+            {
+                "network": "172.22.0.1",
+                "netmask": "255.255.255.0",
+                "gateway": "{{ (provisioning_network[0].address_v4.split('.')[0:3] + [ '0' ])|join('.') }}"
+            }
+        ],
+    },
+    {
+        "id": "external",
+        "type": "ipv4",
+        "link": "external",
+        "ip_address": "{{ (baremetal_network[0].address_v4.split('.')[0:3] + [ ip_last_section ])|join('.') }}",
+        "netmask": "{{ baremetal_network[0].netmask_v4 }}",
+        "routes": [
+            {
+                "network": "192.168.111.1",
+                "netmask": "255.255.255.0"
+                "gateway": "{{ (baremetal_network[0].address_v4.split('.')[0:3] + [ '0' ])|join('.') }}"
+            }
+        ],
+    }
+]
+}

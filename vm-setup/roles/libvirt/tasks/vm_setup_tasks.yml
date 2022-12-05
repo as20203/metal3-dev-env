@@ -85,6 +85,19 @@
         uri: "{{ libvirt_uri }}"
       with_items: "{{ vm_nodes }}"
 
+    # Generate network data for the virtualmedia config drive    
+    - name: Define network_data.json
+      ansible.builtin.template:
+        src: "network_info.json.j2"
+        dest: "/tmp/network-data-{{ item.name | replace('_','-') }}.json"
+      with_items: "{{ vm_nodes }}"
+      loop_control:
+        index_var: node_idx
+
+    # Generate network data patch payload for debug purposes
+
+    # Generate network data secret for BMHs
+
     # Create additional blockdevices for each objectstorage flavor node
     # These are sparse files, not using space if unused
     - name: Create additional blockdevice for objectstorage nodes
