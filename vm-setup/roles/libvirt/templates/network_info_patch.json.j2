@@ -1,0 +1,7 @@
+[
+   {
+      "op": "replace",
+      "path": "/network_data",
+      "value": "{{ lookup('ansible.builtin.template', 'network_info.json.j2') }}"
+   }
+]

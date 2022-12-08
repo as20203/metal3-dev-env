@@ -204,6 +204,20 @@ function make_bm_hosts() {
   done
 }
 
+function apply_network_data_secrets() {
+  while read -r name address user password mac; do
+    kubectl apply  -f "/tmp/network-data-secret-${name}.yml" 
+    echo "network-data-secret-${name} has been applied!"
+  done
+}
+
+function patch_bmh_crs() {
+  while read -r name address user password mac; do
+    kubectl patch "bmh" "${name}" -n "metal3" --type "merge" --patch-file "/tmp/bmh-network-data-patch-${name}.yml"
+    echo "bmh-network-data-patch-${name} was applied!" 
+  done
+}
+
 #
 # Apply the BMH CRs
 #
@@ -216,8 +230,10 @@ function apply_bm_hosts() {
     while ! kubectl apply -f "${WORKING_DIR}/bmhosts_crs.yaml" -n "$NAMESPACE" &>/dev/null; do
 	    sleep 3
     done
-    echo "bmhosts_crs.yaml is successfully applied"
+    echo "bmhosts_crs.yaml is successfully applied" 
   fi
+  list_nodes | apply_network_data_secrets
+  list_nodes | patch_bmh_crs
   popd
 }
 

@@ -31,13 +31,13 @@
         "id": "external",
         "type": "ipv4",
         "link": "external",
-        "ip_address": "{{ (baremetal_network[0].address_v4.split('.')[0:3] + [ ip_last_section ])|join('.') }}",
-        "netmask": "{{ baremetal_network[0].netmask_v4 }}",
+        "ip_address": "{{ (external_network[0].address_v4.split('.')[0:3] + [ ip_last_section ])|join('.') }}",
+        "netmask": "{{ external_network[0].netmask_v4 }}",
         "routes": [
             {
                 "network": "192.168.111.1",
                 "netmask": "255.255.255.0"
-                "gateway": "{{ (baremetal_network[0].address_v4.split('.')[0:3] + [ '0' ])|join('.') }}"
+                "gateway": "{{ (external_network[0].address_v4.split('.')[0:3] + [ '0' ])|join('.') }}"
             }
         ],
     }

@@ -86,17 +86,40 @@
       with_items: "{{ vm_nodes }}"
 
     # Generate network data for the virtualmedia config drive    
-    - name: Define network_data.json
+    - name: Define network_info.json
       ansible.builtin.template:
         src: "network_info.json.j2"
-        dest: "/tmp/network-data-{{ item.name | replace('_','-') }}.json"
+        dest: "/tmp/network-info-{{ item.name | replace('_','-') }}.json"
       with_items: "{{ vm_nodes }}"
       loop_control:
         index_var: node_idx
 
     # Generate network data patch payload for debug purposes
+    - name: Define network_info_patch.json
+      ansible.builtin.template:
+        src: "network_info_patch.json.j2"
+        dest: "/tmp/network-info-patch-{{ item.name | replace('_','-') }}.json"
+      with_items: "{{ vm_nodes }}"
+      loop_control:
+        index_var: node_idx
 
-    # Generate network data secret for BMHs
+    # Generate networ data K8s secret 
+    - name: Define K8s network data secret
+      ansible.builtin.template:
+        src: "network_data_secret.yml.j2"
+        dest: "/tmp/network-data-secret-{{ item.name | replace('_','-') }}.yml"
+      with_items: "{{ vm_nodes }}"
+      loop_control:
+        index_var: node_idx
+
+    # Generate BMH network data patches
+    - name: Define network_info_patch.json
+      ansible.builtin.template:
+        src: "bmh_network_data_patch.yml.j2"
+        dest: "/tmp/bmh-network-data-patch-{{ item.name | replace('_','-') }}.yml"
+      with_items: "{{ vm_nodes }}"
+      loop_control:
+        index_var: node_idx 
 
     # Create additional blockdevices for each objectstorage flavor node
     # These are sparse files, not using space if unused
