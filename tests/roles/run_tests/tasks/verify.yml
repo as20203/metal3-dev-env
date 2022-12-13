@@ -63,7 +63,7 @@
       kubeconfig: /tmp/kubeconfig-{{ CLUSTER_NAME }}.yaml
       field_selectors:
         - status.phase!=Running
-    retries: 9
+    retries: 50
     delay: 20
     register: calico_pods
     until: (calico_pods is succeeded) and
