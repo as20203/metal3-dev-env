@@ -2,9 +2,9 @@
 preKubeadmCommands:
   - systemctl restart NetworkManager.service
   - nmcli connection load /etc/NetworkManager/system-connections/eth0.nmconnection
-  - nmcli connection up eth0
+  - nmcli connection up /etc/NetworkManager/system-connections/eth0.nmconnection
   - nmcli connection load /etc/NetworkManager/system-connections/{{ IRONIC_ENDPOINT_BRIDGE }}.nmconnection
-  - nmcli connection up {{ IRONIC_ENDPOINT_BRIDGE }}
+  - nmcli connection up /etc/NetworkManager/system-connections/{{ IRONIC_ENDPOINT_BRIDGE }}.nmconnection
   - systemctl enable --now crio kubelet
 files:
   - path: /usr/local/bin/retrieve.configuration.files.sh
@@ -35,8 +35,8 @@ files:
       interface-name=eth0
       master={{ IRONIC_ENDPOINT_BRIDGE }}
       slave-type=bridge
-      autoconnect=yes
       autoconnect-priority=999
+      autoconnect-retries=50
   - path: /etc/NetworkManager/system-connections/{{ IRONIC_ENDPOINT_BRIDGE }}.nmconnection
     owner: root:root
     permissions: '0600'
@@ -45,6 +45,9 @@ files:
       id={{ IRONIC_ENDPOINT_BRIDGE }}
       type=bridge
       interface-name={{ IRONIC_ENDPOINT_BRIDGE }}
+      autoconnect-retries=50
+      autoconnect-slaves=1
+      autoconnect-priority=999
 
       [bridge]
       stp=false
