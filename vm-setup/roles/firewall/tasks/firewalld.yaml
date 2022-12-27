@@ -56,3 +56,10 @@
     permanent: yes
     state: enabled
     immediate: yes
+- name: "firewalld: sushy Port"
+  ansible.posix.firewalld:
+    zone: libvirt
+    port: "8001/tcp"
+    permanent: yes
+    state: enabled
+    immediate: yes

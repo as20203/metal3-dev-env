@@ -286,10 +286,12 @@ sudo "${CONTAINER_RUNTIME}" run -d --net host --name vbmc ${POD_NAME_INFRA} \
      "${VBMC_IMAGE}"
 
 #shellcheck disable=SC2086
-sudo "${CONTAINER_RUNTIME}" run -d --net host --name sushy-tools ${POD_NAME_INFRA} \
-     -v "$WORKING_DIR/virtualbmc/sushy-tools":/root/sushy -v "/root/.ssh":/root/ssh \
+sudo "${CONTAINER_RUNTIME}" run -d --net host --name sushy-tools1 ${POD_NAME_INFRA} \
+     -v "$WORKING_DIR/virtualbmc/sushy-tools1":/root/sushy -v "/root/.ssh":/root/ssh \
      "${SUSHY_TOOLS_IMAGE}"
-
+sudo "${CONTAINER_RUNTIME}" run -d --net host --name sushy-tools2 ${POD_NAME_INFRA} \
+     -v "$WORKING_DIR/virtualbmc/sushy-tools2":/root/sushy -v "/root/.ssh":/root/ssh \
+     "${SUSHY_TOOLS_IMAGE}"
 # Installing the openstack/ironic clients on the host is optional
 # if not installed, we copy a wrapper to OPENSTACKCLIENT_PATH which
 # runs the clients in a container (metal3-io/ironic-client)

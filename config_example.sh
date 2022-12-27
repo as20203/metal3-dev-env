@@ -114,7 +114,7 @@
 # and redfish). Can also be set explicitly to ipmi/redfish/redfish-virtualmedia.
 #
 #export BMC_DRIVER="mixed"
-
+export BMC_DRIVER="redfish-virtualmedia"
 #
 # Set libvirt firmware and BMC bootMode
 # Choose "legacy" (bios), "UEFI", or "UEFISecureBoot"
