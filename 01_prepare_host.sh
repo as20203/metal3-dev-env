@@ -87,13 +87,6 @@ ANSIBLE_FORCE_COLOR=true ansible-playbook \
 # nmcli con load /etc/NetworkManager/system-connections/provisioning-1.nmconnection
 # nmcli con up provisioning-1
 
-# After those commands ssh connection will be lost
-# This workaround downgrade NetworkManager version to NetworkManager-1.40.0-1.el9
-if [[ $OS == "centos" || $OS == "rhel" ]]; then
-  sudo yum downgrade -y NetworkManager-1.40.0-1.el9
-  sudo systemctl restart NetworkManager
-fi
-
 # shellcheck disable=SC1091
 source lib/network.sh
 # shellcheck disable=SC1091
