@@ -198,7 +198,7 @@ EXPTD_RS="cluster.x-k8s.io/provider:infrastructure-metal3:capm3-system:2 \
   cluster.x-k8s.io/provider:bootstrap-kubeadm:capi-kubeadm-bootstrap-system:1 \
   cluster.x-k8s.io/provider:control-plane-kubeadm:capi-kubeadm-control-plane-system:1"
 BRIDGES="provisioning baremetal"
-EXPTD_CONTAINERS="httpd-infra registry vbmc sushy-tools"
+EXPTD_CONTAINERS="httpd-infra registry vbmc sushy-tools1 sushy-tools2"
 
 FAILS=0
 BMO_RUN_LOCAL="${BMO_RUN_LOCAL:-false}"
