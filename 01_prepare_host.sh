@@ -271,11 +271,14 @@ function init_minikube() {
     # so just attach it before next boot. As long as the
     # 02_configure_host.sh script does not run, the provisioning network does
     # not exist. Attempting to start Minikube will fail until it is created.
-    if ! echo "$MINIKUBE_IFACES" | grep -w provisioning  > /dev/null ; then
-      sudo virsh attach-interface --domain minikube \
-          --model virtio --source provisioning \
-          --type network --config
-    fi
+    for i in $(seq 1 $NUM_OF_IRONICS); do
+      interface="provisioning-${i}"
+      if ! echo "$MINIKUBE_IFACES" | grep -w $interface  > /dev/null ; then
+        sudo virsh attach-interface --domain minikube \
+            --model virtio --source $interface \
+            --type network --config
+      fi
+    done
 
     if ! echo "$MINIKUBE_IFACES" | grep -w baremetal  > /dev/null ; then
       sudo virsh attach-interface --domain minikube \

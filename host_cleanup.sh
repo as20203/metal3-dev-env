@@ -55,7 +55,9 @@ fi
 if [[ $OS == "centos" || $OS == "rhel" ]]; then
   sudo rm -rf /etc/NetworkManager/conf.d/dnsmasq.conf
   if [ "$MANAGE_PRO_BRIDGE" == "y" ]; then
-      sudo nmcli con delete provisioning
+    for i in $(seq 1 $NUM_OF_IRONICS); do
+      sudo nmcli con delete provisioning-${i}
+    done
   fi
   # Baremetal net should have been cleaned already at this stage, but we double
   # check as leaving it around causes issues when the host is rebooted

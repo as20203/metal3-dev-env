@@ -8,7 +8,8 @@
     vm_nodes: "{{vm_nodes + [
                  {'name': ironic_prefix + '%s_%s'|format(flavor.key, item),
                   'flavor': flavor.key,
-                  'virtualbmc_port': virtualbmc_base_port|int+vm_nodes_index|int+item} ]}}"
+                  'virtualbmc_port': virtualbmc_base_port|int+vm_nodes_index|int+item,
+                  'networks': external_network + [provisioning_networks[vm_nodes_index|int]]} ]}}"
   loop: "{{ range(0, lookup('vars', 'num_' + flavor.key + 's')|int)|list }}"
 - set_fact:
     vm_nodes_index: "{{vm_nodes_index|int + lookup('vars', 'num_' + flavor.key + 's')|int }}"

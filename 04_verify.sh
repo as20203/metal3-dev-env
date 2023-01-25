@@ -191,13 +191,17 @@ EXPTD_V1ALPHAX_V1BETAX_CRDS="clusters.cluster.x-k8s.io \
 EXPTD_DEPLOYMENTS="capm3-system:capm3-controller-manager \
   capi-system:capi-controller-manager \
   capi-kubeadm-bootstrap-system:capi-kubeadm-bootstrap-controller-manager \
-  capi-kubeadm-control-plane-system:capi-kubeadm-control-plane-controller-manager \
-  baremetal-operator-system:baremetal-operator-controller-manager"
+  capi-kubeadm-control-plane-system:capi-kubeadm-control-plane-controller-manager"
 EXPTD_RS="cluster.x-k8s.io/provider:infrastructure-metal3:capm3-system:2 \
   cluster.x-k8s.io/provider:cluster-api:capi-system:1 \
   cluster.x-k8s.io/provider:bootstrap-kubeadm:capi-kubeadm-bootstrap-system:1 \
   cluster.x-k8s.io/provider:control-plane-kubeadm:capi-kubeadm-control-plane-system:1"
-BRIDGES="provisioning baremetal"
+BRIDGES=("baremetal")
+for i in $(seq 1 $NUM_OF_IRONICS); do
+  BRIDGES+=("provisioning-${i}")
+  EXPTD_DEPLOYMENTS="${EXPTD_DEPLOYMENTS} \
+  baremetal-operator-system-${i}:baremetal-operator-controller-manager"
+done
 EXPTD_CONTAINERS="httpd-infra registry vbmc sushy-tools"
 
 FAILS=0
@@ -206,7 +210,7 @@ CAPM3_RUN_LOCAL="${CAPM3_RUN_LOCAL:-false}"
 
 
 # Verify networking
-for bridge in ${BRIDGES}; do
+for bridge in "${BRIDGES[@]}"; do
   RESULT_STR="Network ${bridge} exists"
   ip link show dev "${bridge}" > /dev/null
   process_status $? "Network ${bridge} exists"

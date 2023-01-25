@@ -26,6 +26,14 @@
 
 # Create the global, root-managed libvirt networks to which we will
 # attach the undercoud and vm virtual machines.
+- name: Render libvirt networks
+  template:
+    src: '{{ lookup("file", "network.xml.j2") }}'
+    dest: "{{ item.name }}.xml"
+  with_items: "{{ networks }}"
+  become: true
+  ignore_errors: true
+
 - name: Create libvirt networks
   virt_net:
     command: define

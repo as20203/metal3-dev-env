@@ -69,7 +69,35 @@ EOF
   fi
 
   # Deploy BMO using deploy.sh script
-  "${BMOPATH}/tools/deploy.sh" -b "${BMO_IRONIC_ARGS[@]}"
+  # "${BMOPATH}/tools/deploy.sh" -b "${BMO_IRONIC_ARGS[@]}"
+  for i in $(seq 1 $NUM_OF_IRONICS); do
+    ironic_env_file="${IRONIC_DATA_DIR}/ironic_bmo_configmap_${i}.env"
+    PROVISIONING_NETWORK="172.$(( 21 + $i )).0.0/24"
+    CLUSTER_PROVISIONING_INTERFACE="ironicendpoint$((i))"
+    network_address CLUSTER_PROVISIONING_IP "$PROVISIONING_NETWORK" 2
+    network_address DHCP_START "$PROVISIONING_NETWORK" 10
+    network_address DHCP_END "$PROVISIONING_NETWORK" 100
+    CLUSTER_DHCP_RANGE=$DHCP_START,$DHCP_END
+    export IRONIC_NAMESPACE="baremetal-operator-system-${i}"
+    network_address PROVISIONING_URL_HOST "$PROVISIONING_NETWORK" 1
+  cat << EOF | sudo tee "${ironic_env_file}"
+HTTP_PORT=6180
+PROVISIONING_IP=${CLUSTER_PROVISIONING_IP}
+PROVISIONING_CIDR=${PROVISIONING_CIDR}
+PROVISIONING_INTERFACE=${CLUSTER_PROVISIONING_INTERFACE}
+DHCP_RANGE=${CLUSTER_DHCP_RANGE}
+DEPLOY_KERNEL_URL="${CLUSTER_PROVISIONING_IP}:6180/images/ironic-python-agent.kernel"
+DEPLOY_RAMDISK_URL="${CLUSTER_PROVISIONING_IP}:6180/images/ironic-python-agent.initramfs"
+IRONIC_ENDPOINT="${CLUSTER_PROVISIONING_IP}:6385/v1"
+IRONIC_INSPECTOR_ENDPOINT=${CLUSTER_PROVISIONING_IP}:5050/v1"
+CACHEURL=http://${PROVISIONING_URL_HOST}/images
+IRONIC_FAST_TRACK=true
+RESTART_CONTAINER_CERTIFICATE_UPDATED="${RESTART_CONTAINER_CERTIFICATE_UPDATED}"
+IRONIC_RAMDISK_SSH_KEY=${SSH_PUB_KEY_CONTENT}
+IRONIC_USE_MARIADB=${IRONIC_USE_MARIADB:-false}
+EOF
+    "${BMOPATH}/tools/deploy.sh" -b "${BMO_IRONIC_ARGS[@]}" "-e${ironic_env_file}" 2>&1 | tee "${BMOPATH}/${IRONIC_NAMESPACE}_ironic.log"
+  done
 
   # If BMO should run locally, scale down the deployment and run BMO
   if [ "${BMO_RUN_LOCAL}" == "true" ]; then
@@ -204,8 +232,36 @@ EOF
     update_images
     ${RUN_LOCAL_IRONIC_SCRIPT}
   else
+    # "${BMOPATH}/tools/deploy.sh" -i "${BMO_IRONIC_ARGS[@]}"
     # Deploy Ironic using deploy.sh script
-    "${BMOPATH}/tools/deploy.sh" -i "${BMO_IRONIC_ARGS[@]}"
+    for i in $(seq 1 $NUM_OF_IRONICS); do
+      ironic_env_file="${IRONIC_DATA_DIR}/ironic_bmo_configmap_${i}.env"
+      PROVISIONING_NETWORK="172.$(( 21 + $i )).0.0/24"
+      CLUSTER_PROVISIONING_INTERFACE="ironicendpoint$((i))"
+      network_address CLUSTER_PROVISIONING_IP "$PROVISIONING_NETWORK" 2
+      network_address DHCP_START "$PROVISIONING_NETWORK" 10
+      network_address DHCP_END "$PROVISIONING_NETWORK" 100
+      CLUSTER_DHCP_RANGE=$DHCP_START,$DHCP_END
+      export IRONIC_NAMESPACE="baremetal-operator-system-${i}"
+      network_address PROVISIONING_URL_HOST "$PROVISIONING_NETWORK" 1
+    cat << EOF | sudo tee "${ironic_env_file}"
+HTTP_PORT=6180
+PROVISIONING_IP=${CLUSTER_PROVISIONING_IP}
+PROVISIONING_CIDR=${PROVISIONING_CIDR}
+PROVISIONING_INTERFACE=${CLUSTER_PROVISIONING_INTERFACE}
+DHCP_RANGE=${CLUSTER_DHCP_RANGE}
+DEPLOY_KERNEL_URL="${CLUSTER_PROVISIONING_IP}:6180/images/ironic-python-agent.kernel"
+DEPLOY_RAMDISK_URL="${CLUSTER_PROVISIONING_IP}:6180/images/ironic-python-agent.initramfs"
+IRONIC_ENDPOINT="${CLUSTER_PROVISIONING_IP}:6385/v1"
+IRONIC_INSPECTOR_ENDPOINT=${CLUSTER_PROVISIONING_IP}:5050/v1"
+CACHEURL=http://${PROVISIONING_URL_HOST}/images
+IRONIC_FAST_TRACK=true
+RESTART_CONTAINER_CERTIFICATE_UPDATED="${RESTART_CONTAINER_CERTIFICATE_UPDATED}"
+IRONIC_RAMDISK_SSH_KEY=${SSH_PUB_KEY_CONTENT}
+IRONIC_USE_MARIADB=${IRONIC_USE_MARIADB:-false}
+EOF
+      "${BMOPATH}/tools/deploy.sh" -i "${BMO_IRONIC_ARGS[@]}" "-e${ironic_env_file}" 2>&1 | tee "${BMOPATH}/${IRONIC_NAMESPACE}_bmo.log"
+    done
   fi
   popd
 }
@@ -438,10 +494,15 @@ function start_management_cluster () {
     if [[ "${PROVISIONING_IPV6}" == "true" ]]; then
       sudo su -l -c 'minikube ssh "sudo ip -6 addr add '"$CLUSTER_PROVISIONING_IP/$PROVISIONING_CIDR"' dev eth2"' "${USER}"
     else
-      sudo su -l -c "minikube ssh sudo brctl addbr $CLUSTER_PROVISIONING_INTERFACE" "${USER}"
-      sudo su -l -c "minikube ssh sudo ip link set $CLUSTER_PROVISIONING_INTERFACE up" "${USER}"
-      sudo su -l -c "minikube ssh sudo brctl addif $CLUSTER_PROVISIONING_INTERFACE eth2" "${USER}"
-      sudo su -l -c "minikube ssh sudo ip addr add $INITIAL_IRONICBRIDGE_IP/$PROVISIONING_CIDR dev $CLUSTER_PROVISIONING_INTERFACE" "${USER}"
+      for i in $(seq 1 $NUM_OF_IRONICS); do
+        PROVISIONING_NETWORK="172.$(( 21 + $i )).0.0/24"
+        CLUSTER_PROVISIONING_INTERFACE="ironicendpoint$((i))"
+        network_address INITIAL_IRONICBRIDGE_IP "$PROVISIONING_NETWORK" 2
+        sudo su -l -c "minikube ssh sudo brctl addbr ${CLUSTER_PROVISIONING_INTERFACE}" "${USER}"
+        sudo su -l -c "minikube ssh sudo ip link set ${CLUSTER_PROVISIONING_INTERFACE} up" "${USER}"
+        sudo su -l -c "minikube ssh sudo brctl addif ${CLUSTER_PROVISIONING_INTERFACE} eth$(($i + 1))" "${USER}"
+        sudo su -l -c "minikube ssh sudo ip addr add $INITIAL_IRONICBRIDGE_IP/$PROVISIONING_CIDR dev $CLUSTER_PROVISIONING_INTERFACE" "${USER}"
+      done
     fi
   fi
 }
@@ -465,10 +526,13 @@ if [ "${EPHEMERAL_CLUSTER}" != "tilt" ]; then
   launch_ironic
 
   if [[ "${BMO_RUN_LOCAL}" != true ]]; then
-    if ! kubectl rollout status deployment "${BMO_NAME_PREFIX}"-controller-manager -n "${IRONIC_NAMESPACE}" --timeout=5m; then
-      echo "baremetal-operator-controller-manager deployment can not be rollout"
-      exit 1
-    fi
+    for i in $(seq 1 $NUM_OF_IRONICS); do
+      IRONIC_NAMESPACE="baremetal-operator-system-${i}"
+      if ! kubectl rollout status deployment "${BMO_NAME_PREFIX}"-controller-manager -n "${IRONIC_NAMESPACE}" --timeout=5m; then
+        echo "baremetal-operator-controller-manager deployment can not be rollout"
+        exit 1
+      fi
+    done
   else
     # There is no certificate to run validation webhook on local.
     # Thus we are deleting validatingwebhookconfiguration resource if exists to let BMO is working properly on local runs.

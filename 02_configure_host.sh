@@ -31,7 +31,8 @@ ANSIBLE_FORCE_COLOR=true ansible-playbook \
     -e "nodes_file=$NODES_FILE" \
     -e "node_hostname_format=$NODE_HOSTNAME_FORMAT" \
     -i vm-setup/inventory.ini \
-    -b vm-setup/setup-playbook.yml
+    -b vm-setup/setup-playbook.yml \
+    -vvvvv
 
 # Usually virt-manager/virt-install creates this: https://www.redhat.com/archives/libvir-list/2008-August/msg00179.html
 if ! sudo virsh pool-uuid default > /dev/null 2>&1 ; then
@@ -55,16 +56,24 @@ if [[ $OS == ubuntu ]]; then
   source disable_apparmor_driver_libvirtd.sh
 else
   if [ "$MANAGE_PRO_BRIDGE" == "y" ]; then
-      # Adding an IP address in the libvirt definition for this network results in
-      # dnsmasq being run, we don't want that as we have our own dnsmasq, so set
-      # the IP address here
-      if [ ! -e /etc/NetworkManager/system-connections/provisioning.nmconnection ] ; then
+    for i in $(seq 1 $NUM_OF_IRONICS); do
+      PROVISIONING_NETWORK="172.$(( 21 + $i )).0.0/24"
+      CLUSTER_PROVISIONING_INTERFACE="ironicendpoint$((i))"
+      network_address PROVISIONING_IP "$PROVISIONING_NETWORK" 1
+      network_id="provisioning-${i}"
+      # virsh net-start $network_id
+      network_definition="/etc/NetworkManager/system-connections/${network_id}.nmconnection"
+    # Adding an IP address in the libvirt definition for this network results in
+    # dnsmasq being run, we don't want that as we have our own dnsmasq, so set
+    # the IP address here
+    #
+      if [ ! -e $network_definition ] ; then
         if [[ "${PROVISIONING_IPV6}" == "true" ]]; then
-          sudo tee -a /etc/NetworkManager/system-connections/provisioning.nmconnection <<EOF
+          sudo tee -a $network_definition <<EOF
 [connection]
-id=provisioning
+id=${network_id}
 type=bridge
-interface-name=provisioning
+interface-name=${network_id}
 
 [bridge]
 stp=false
@@ -77,12 +86,12 @@ addr-gen-mode=eui64
 address1=$PROVISIONING_IP/$PROVISIONING_CIDR
 method=manual
 EOF
-        else
-          sudo tee -a /etc/NetworkManager/system-connections/provisioning.nmconnection <<EOF
+      else
+        sudo tee -a $network_definition <<EOF
 [connection]
-id=provisioning
+id=${network_id}
 type=bridge
-interface-name=provisioning
+interface-name=${network_id}
 
 [bridge]
 stp=false
@@ -95,15 +104,15 @@ method=manual
 addr-gen-mode=eui64
 method=disabled
 EOF
-     	  fi
-        sudo chmod 600 /etc/NetworkManager/system-connections/provisioning.nmconnection
-        sudo nmcli con load /etc/NetworkManager/system-connections/provisioning.nmconnection
-      fi
-      sudo nmcli con up provisioning
+        fi
+      sudo chmod 600 $network_definition
+      sudo nmcli con load $network_definition
+    fi
+    sudo nmcli con up ${network_id}
 
-      # Need to pass the provision interface for bare metal
-      if [ "$PRO_IF" ]; then
-          sudo tee -a /etc/NetworkManager/system-connections/"$PRO_IF".nmconnection <<EOF
+    # Need to pass the provision interface for bare metal
+    if [ "$PRO_IF" ]; then
+        sudo tee -a /etc/NetworkManager/system-connections/"$PRO_IF-${i}".nmconnection <<EOF
 [connection]
 id=$PRO_IF
 type=ethernet
@@ -111,10 +120,11 @@ interface-name=$PRO_IF
 master=provisioning
 slave-type=bridge
 EOF
-          sudo chmod 600 /etc/NetworkManager/system-connections/"$PRO_IF".nmconnection
-          sudo nmcli con load /etc/NetworkManager/system-connections/"$PRO_IF".nmconnection
-          sudo nmcli con up "$PRO_IF"
-      fi
+        sudo chmod 600 /etc/NetworkManager/system-connections/"$PRO_IF".nmconnection
+        sudo nmcli con load /etc/NetworkManager/system-connections/"$PRO_IF".nmconnection
+        sudo nmcli con up "$PRO_IF"
+    fi
+  done
 
 
   if [ "$MANAGE_INT_BRIDGE" == "y" ]; then
@@ -178,7 +188,9 @@ ANSIBLE_FORCE_COLOR=true ansible-playbook \
 
 # FIXME(stbenjam): ansbile firewalld module doesn't seem to be doing the right thing
 if [ "$USE_FIREWALLD" == "True" ]; then
-  sudo firewall-cmd --zone=libvirt --change-interface=provisioning
+  for i in $(seq 1 $NUM_OF_IRONICS); do
+    sudo firewall-cmd --zone=libvirt --change-interface="provisioning-${i}"
+  done
   sudo firewall-cmd --zone=libvirt --change-interface=baremetal
 fi
 
@@ -203,7 +215,7 @@ sleep 5
 
 # Clone all needed repositories (CAPI, CAPM3, BMO, IPAM)
 mkdir -p "${M3PATH}"
-clone_repo "${BMOREPO}" "${BMOBRANCH}" "${BMOPATH}" "${BMOCOMMIT}"
+# clone_repo "${BMOREPO}" "${BMOBRANCH}" "${BMOPATH}" "${BMOCOMMIT}"
 clone_repo "${CAPM3REPO}" "${CAPM3BRANCH}" "${CAPM3PATH}" "${CAPM3COMMIT}"
 clone_repo "${IPAMREPO}" "${IPAMBRANCH}" "${IPAMPATH}" "${IPAMCOMMIT}"
 clone_repo "${CAPIREPO}" "${CAPIBRANCH}" "${CAPIPATH}" "${CAPICOMMIT}"

@@ -30,6 +30,7 @@ function prefixlen() {
 }
 
 # Provisioning Interface
+export NUM_OF_IRONICS=${NUM_OF_IRONICS:-2}
 export CLUSTER_PROVISIONING_INTERFACE=${CLUSTER_PROVISIONING_INTERFACE:-"ironicendpoint"}
 
 # POD CIDR
@@ -189,7 +190,6 @@ else
   export REGISTRY=${REGISTRY:-"[${EXTERNAL_SUBNET_V6_HOST}]:${REGISTRY_PORT}"}
 fi
 
-network_address INITIAL_IRONICBRIDGE_IP "$PROVISIONING_NETWORK" 9
 
 export DEPLOY_KERNEL_URL=${DEPLOY_KERNEL_URL:-"http://${CLUSTER_URL_HOST}:${HTTP_PORT}/images/ironic-python-agent.kernel"}
 export DEPLOY_RAMDISK_URL=${DEPLOY_RAMDISK_URL:-"http://${CLUSTER_URL_HOST}:${HTTP_PORT}/images/ironic-python-agent.initramfs"}
