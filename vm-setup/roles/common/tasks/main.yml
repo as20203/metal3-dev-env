@@ -3,10 +3,27 @@
 - set_fact:
     generate_vm_nodes: "{{vm_nodes is not defined}}"
 
+- set_fact:
+    networks_nat_only: "{{ lookup('env', 'ENABLE_NATED_PROVISIONING_NETWORK') | bool }}"
+
+- name: "Show network_mode data for debugging (common role)"
+  debug:
+    var: networks_nat_only
+
 - name: Set an empty default for vm_nodes if not already defined
   set_fact:
     vm_nodes: []
   when: generate_vm_nodes
+
+- name: Set networks based on networks_mixed
+  set_fact:
+    networks: "{{ networks_mixed }}"
+  when: not networks_nat_only
+
+- name: Set networks based on networks_nated
+  set_fact:
+    networks: "{{ networks_nated }}"
+  when: networks_nat_only
 
 - name: Populate vm_nodes if not already defined
   when: generate_vm_nodes
@@ -32,9 +49,9 @@
 
 - name: "Append extra networks when EXTRA_NETWORK_NAMES is configured"
   set_fact:
-    networks: "{{ networks + extra_networks}}"
+    networks: "{{ networks + extra_networks }}"
   when: generate_extra_networks
 
-- name: "Show networks data for debugging"
+- name: "Show networks data for debugging (commond role)"
   debug:
     var: networks
