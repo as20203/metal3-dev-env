@@ -11,6 +11,7 @@ source "${METAL3_DEV_ENV_DIR}/lib/logging.sh"
 source "${METAL3_DEV_ENV_DIR}/lib/common.sh"
 
 eval "$(go env)"
+GOPATH="${GOPATH:-/home/$(whoami)/go}"
 export GOPATH
 
 # Environment variables
